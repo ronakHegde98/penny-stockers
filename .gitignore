@@ -1,0 +1,24 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+#flask
+instance/
+.webassets-cache
+
+# logs from production
+stocktwits/logs/
+
+# virtual environment
+venv/
+
+
+
+stocktwits/config/google_creds.json
+google_creds.json
+config/google_creds.json
+stocktwits/config/*.json
+
+
+
