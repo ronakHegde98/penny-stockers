@@ -7,4 +7,5 @@ class People:
         print(BASE_URL)
 
 path = '/usr/bin/chromedrive'
-print(os.path.exists(path))
+
+print(__name__)

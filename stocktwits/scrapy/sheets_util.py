@@ -2,10 +2,13 @@ from gspread import exceptions as gspread_exceptions
 from util import get_current_datetime 
 import time
 
+import logging
+
+ 
+
 def fill_column(col_index, sheet, data: list, start_row_index = 0) -> None:
     time.sleep(2)
-    
-       
+
     row_index = start_row_index
 
     for index, value in enumerate(data):
@@ -39,10 +42,16 @@ def insert_timestamp_header(sheet, col_index):
     except gspread_exceptions.IncorrectCellLabel:
         print((f'There was an issue inserting a timestamp at position: (1, {col_index}) for sheet: {sheet.title}'))
 
-def get_new_col_values(sheet,col_index:int,
-        starting_row_index:int,input_list:list):
-    
-    ''' return the elements in input_list that are not already in the column '''
-    current_col_values = sheet.col_values(col_index)[starting_row_index:]
-    return set(input_list) - set(current_col_values)
+def setup_column(sheet, append_new_column = True, new_col_index = None):
+    if(not new_col_index):
+        new_col_index = get_new_col_index(sheet)
+
+    if(append_new_column):
+        append_column(sheet)
+        
+    insert_timestamp_header(sheet, col_index = new_col_index)
+
+def get_column_values(sheet, col_index: int, starting_row_index: int = 1):
+    return sheet.col_values(col_index)[starting_row_index:]
+
 

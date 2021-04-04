@@ -1,6 +1,6 @@
 from util import get_current_datetime, is_int
-from scraper_util import get_web_driver
-from sheets_util import fill_column,get_sheet, get_new_col_index, insert_timestamp_header, append_column, get_new_col_values
+from scraper_util import get_web_driver, get_page_source, kill_chrome, get_soup_object
+from sheets_util import *
 
 from bs4 import BeautifulSoup
 from pathlib import Path
@@ -18,9 +18,13 @@ stocktwits_path = str(Path(os.getcwd()).parent) + '/'
 sys.path.append(stocktwits_path)
 from config.creds import get_gsheets_client 
 
+# exception handling
+from selenium.common.exceptions import WebDriverException
+
 class StockTwitsScraper:  
 
     BASE_URL = 'https://stocktwits.com'
+    SYMBOL_BASE_URL = BASE_URL + '/symbol/'
     spreadsheet_name = 'Penny Stalkers'
 
     def __init__(self):
@@ -43,127 +47,172 @@ class StockTwitsScraper:
             return ''
 
 class WatchCountScraper(StockTwitsScraper):
-    def __init__(self):
-        pass
-
-class TrendingSymbolScraper(StockTwitsScraper):
-    """ scraping the top ten symbols with most new watchers in the last 24 hours"""
-   
-    # TODO: create a script that gets the latest chromedriver and chrome version (every week once)
-    # TODO: kill the process after it is spawned using try/except/finally
-
-    PRICE_GSHEET = 'TrendingPrices'
-    WATCH_COUNT_GSHEET = 'TrendingWatchCount'
+    
+    GSHEET = 'Stocktwits'
 
     def __init__(self):
         super().__init__()
-        scraping_category = 'watchers'
-        self.TRENDING_URL = self.BASE_URL + f'/rankings/{scraping_category}'
+        self.sheet = get_sheet(spreadsheet = self.spreadsheet, sheet_name = self.GSHEET)
+
+    def get_watch_counts(self, symbols: list):
+        watch_counts = []
+
+        for symbol in symbols:
+            if(symbol):
+                symbol_url = self.SYMBOL_BASE_URL + symbol
+                soup = get_soup_object(url = symbol_url)
+                if(soup):
+                    watch_count = self.get_symbol_watch_count(soup)
+                    watch_counts.append(watch_count)
+                else:
+                    watch_counts.append('')
+            else:
+                watch_counts.append('')
+
+            #time.sleep(random.randint(0,2))
+        return watch_counts
+    
+    def execute(self):
+        symbols = get_column_values(
+                sheet = self.sheet,
+                col_index = 1)
+        
+        watch_counts = self.get_watch_counts(symbols)
+        
+        new_col_index = get_new_col_index(self.sheet)
+        
+        setup_column(
+                sheet = self.sheet,
+                append_new_column = True,
+                new_col_index = new_col_index)
+
+        fill_column(
+                col_index = new_col_index,
+                sheet = self.sheet,
+                data = watch_counts,
+                start_row_index = 2)
+                
+
+class TrendingSymbolScraper(StockTwitsScraper):
+    """ scraping the top trending symbols from a given stocktwits category in the last 24 hours"""
+
+    PRICE_GSHEET = 'TrendingPrices'
+    WATCH_COUNT_GSHEET = 'TrendingWatchCount'
+    ranking_categories = ['trending', 'most-active', 'watchers']
+    
+    def __init__(self, scraping_category):
+        super().__init__()
+
+        if(self.is_valid_scraping_category(scraping_category)):
+            self.TRENDING_URL = self.BASE_URL + f'/rankings/{scraping_category}'
+        
         self.price_sheet = get_sheet(self.spreadsheet, self.PRICE_GSHEET)
         self.watch_sheet = get_sheet(self.spreadsheet, self.WATCH_COUNT_GSHEET)
+        self.sheets = [self.price_sheet, self.watch_sheet]
 
-    def get_trending_symbols(self, wd):
-        #TODO: check if request was successful
-        wd.get(self.TRENDING_URL)
-    
-        page_html = wd.page_source
-        dataframes = pd.read_html(page_html)
-        trending_df = dataframes[0]     
-        symbols = list(trending_df['Symbol'])
-        return symbols
-    
-    def scrape(self):
-        pass
+    def is_valid_scraping_category(self, category):
+        if(category.lower() in self.ranking_categories
+                and isinstance(category, str)):
+            return True
 
-    def get_trending_symbol_info(self,ticker_url:str):
+    def scrape_trending_symbols(self):
+        wd = get_web_driver()
+        trending_symbols = []
+
+        try:
+            page_html = get_page_source(wd, url = self.TRENDING_URL)
+            dataframes = pd.read_html(page_html)    
+            trending_df = dataframes[0]
+            trending_symbols = list(trending_df['Symbol'])
+        except WebDriverException:
+            #TODO: logging
+            pass
+        except ValueError:
+            #TODO: logging
+            pass
+        except KeyError:
+            #TODO: logging
+            pass
+        finally:
+            wd.quit() 
+        return trending_symbols
+    
+    def get_trending_symbols(self):
+        kill_chrome()
+        trending_symbols_raw = self.scrape_trending_symbols()
+        trending_symbols = [symbol.replace('-', '.') for symbol in trending_symbols_raw]
+        return trending_symbols
+
+    def get_symbols_data(self, symbols:list):
+        prices = []
+        watch_counts = []
+
+        for symbol in symbols:
+            ticker_url = self.SYMBOL_BASE_URL + symbol
+            price, watch_count = self.scrape_symbol_data(ticker_url)
+            prices.append(price)
+            watch_counts.append(watch_count)
+            time.sleep(1)
+
+        return prices, watch_counts
+
+    def scrape_symbol_data(self,ticker_url:str):
         """ return prices and counts of trending symbols """
         price, watch_count = '', ''
 
-        if(ticker_url):
-            r = requests.get(ticker_url)
-            if(r.status_code == 200):
-                soup = BeautifulSoup(r.content, 'lxml')
-                price = self.get_symbol_price(soup)
-                watch_count = self.get_symbol_watch_count(soup)
+        soup = get_soup_object(ticker_url)
+        if(soup):
+            price = self.get_symbol_price(soup)
+            watch_count = self.get_symbol_watch_count(soup)
+        else:
+            #TODO: log an error message if the page was not reachable
+            pass
 
         return price, watch_count
 
     def execute(self):
-        #TODO: kill any running instances of chrome before opening 
-        wd = get_web_driver()
-        trending_symbols_raw = self.get_trending_symbols(wd)
-        wd.close()
         
-
-        print(trending_symbols_raw)
-        trending_symbols = [symbol.replace('-', '.') for symbol in trending_symbols_raw]
-        new_trending_symbols = get_new_col_values(
-                self.price_sheet, col_index = 1, 
-                starting_row_index = 1,
-                input_list = trending_symbols)
-
-
-        new_col_index = get_new_col_index(self.price_sheet)
-        append_column(self.price_sheet) 
-        insert_timestamp_header(self.price_sheet, new_col_index)
-    
-        append_column(self.watch_sheet)
-        insert_timestamp_header(self.watch_sheet, new_col_index)
-
-
-        current_symbols = self.price_sheet.col_values(1)[1:]
+        current_symbols = get_column_values(
+                sheet = self.price_sheet,
+                col_index = 1)
         num_current_symbols = len(current_symbols)
-
-        #append new symbols to end of first column
-        fill_column(col_index = 1, 
-                sheet = self.price_sheet,
-                data = new_trending_symbols,
-                start_row_index = num_current_symbols + 2) 
-    
-        fill_column(col_index = 1, 
-                sheet = self.watch_sheet,
-                data = new_trending_symbols,
-                start_row_index = num_current_symbols + 2)
-
-        time.sleep(20)
-    
-        tracked_symbols = self.price_sheet.col_values(1)[1:]
-
-        base_url = 'https://stocktwits.com/symbol/'
-        prices = []
-        watchers = []
-        for symbol in tracked_symbols:
-            ticker_url = base_url + symbol
-            price, watch_count = self.get_trending_symbol_info(ticker_url)
-            prices.append(price)
-            watchers.append(watch_count)
-            time.sleep(1)
-       
-
-        fill_column(col_index = new_col_index,
-                sheet = self.price_sheet,
-                data = prices,
-                start_row_index = 2)
         
-        fill_column(col_index = new_col_index,
-                sheet = self.watch_sheet, 
-                data = watchers,
-                start_row_index = 2)
-
-        '''
-        for index, symbol in enumerate(new_symbols):
-            self.sheet.update_cell(num_current_symbols + (index+1), 1, symbol)
+        trending_symbols = self.get_trending_symbols()
+        new_trending_symbols = set(trending_symbols) - set(current_symbols)
         
-        for index, symbol in enumerate(scraped_symbols):
-            if symbol in current_symbols:
-                symbol_index = current_symbols.index(symbol)
-                print(f'{symbol} is in the current symbols list @ position: {symbol_index + 1} ')
-                self.sheet.update_cell(index+1, 2, prices[index])
-            else:
-                print(f'{symbol} is not in the current sumbols list')
-        print(len(current_symbols))
-        '''
+        if(new_trending_symbols):
+            new_col_index = get_new_col_index(self.price_sheet) 
+        
+            for sheet in self.sheets:
+                setup_column(
+                        sheet = sheet,
+                        append_new_column = True,
+                        new_col_index = new_col_index)
+                fill_column(
+                        col_index = 1,
+                        sheet = sheet, 
+                        data = new_trending_symbols,
+                        start_row_index = num_current_symbols + 2)
+    
+                #bump this number up
+                time.sleep(10)    
+        
+
+            tracked_symbols = get_column_values(self.price_sheet, 
+                    col_index = 1)
+        
+            prices, watch_counts = self.get_symbols_data(symbols = tracked_symbols)
+        
+            for sheet, data in zip(self.sheets, [prices, watch_counts]):
+                time.sleep(20)
+                fill_column(col_index = new_col_index,
+                        sheet = sheet,
+                        data = data,
+                        start_row_index = 2)
         
 if __name__ == "__main__":
-    TSS = TrendingSymbolScraper()
+    TSS = TrendingSymbolScraper(scraping_category = 'watchers')
     TSS.execute()
+
+    #WCS = WatchCountScraper()
+    #WCS.execute()
