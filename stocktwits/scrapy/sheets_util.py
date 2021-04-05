@@ -2,9 +2,7 @@ from gspread import exceptions as gspread_exceptions
 from util import get_current_datetime 
 import time
 
-import logging
-
- 
+import logging 
 
 def fill_column(col_index, sheet, data: list, start_row_index = 0) -> None:
     time.sleep(2)
@@ -53,5 +51,3 @@ def setup_column(sheet, append_new_column = True, new_col_index = None):
 
 def get_column_values(sheet, col_index: int, starting_row_index: int = 1):
     return sheet.col_values(col_index)[starting_row_index:]
-
-

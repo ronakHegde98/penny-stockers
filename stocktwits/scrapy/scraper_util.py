@@ -1,9 +1,9 @@
-from selenium.common.exceptions import WebDriverException
-from selenium import webdriver
-import pandas as pd
+from selenium.common.exceptions import WebDriverException #type: ignore 
+from selenium import webdriver #type: ignore
+import pandas as pd # type: ignore
 import os
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup # type: ignore
 
 CHROME_DRIVER_PATH = '/usr/bin/chromedriver'
 
@@ -24,7 +24,7 @@ def get_web_driver():
     else:
         return None
 
-def get_page_source(wd, url):
+def get_page_source(wd: webdriver, url: str) -> str:
     wd.get(url)
     return wd.page_source
 
@@ -33,19 +33,10 @@ def kill_chrome():
 
 
 ''' BEAUTIFULSOUP UTIL FUNCTIONS '''
-def get_soup_object(url: str):
+def get_soup_object(url: str) -> BeautifulSoup:
     if(url):
         response = requests.get(url)
         if(response.status_code == 200):
             soup = BeautifulSoup(response.content, 'lxml')
             return soup
-
-
-
-
-
-
-
-
-
 

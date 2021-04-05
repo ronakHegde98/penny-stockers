@@ -4,6 +4,7 @@ from sheets_util import *
 
 from bs4 import BeautifulSoup
 from pathlib import Path
+from typing import Tuple, List
 import pandas as pd
 import requests
 import random
@@ -31,7 +32,7 @@ class StockTwitsScraper:
         gsheets_client = get_gsheets_client()
         self.spreadsheet = gsheets_client.open(self.spreadsheet_name)
     
-    def get_symbol_price(self, soup):
+    def get_symbol_price(self, soup: BeautifulSoup) -> str:
         price_class = 'st_3zYaKAL'
         price_tag = soup.find('span', attrs = {'class': price_class})
         if(price_tag):
@@ -39,7 +40,7 @@ class StockTwitsScraper:
         else:
             return '' 
    
-    def get_symbol_watch_count(self, soup):
+    def get_symbol_watch_count(self, soup: BeautifulSoup) -> str:
         watch_count_tag = soup.find('strong')
         if(watch_count_tag):
             return watch_count_tag.text
@@ -54,7 +55,7 @@ class WatchCountScraper(StockTwitsScraper):
         super().__init__()
         self.sheet = get_sheet(spreadsheet = self.spreadsheet, sheet_name = self.GSHEET)
 
-    def get_watch_counts(self, symbols: list):
+    def get_watch_counts(self, symbols: List[str]) -> List[str]:
         watch_counts = []
 
         for symbol in symbols:
@@ -69,7 +70,8 @@ class WatchCountScraper(StockTwitsScraper):
             else:
                 watch_counts.append('')
 
-            #time.sleep(random.randint(0,2))
+            time.sleep(random.randint(0,1))
+
         return watch_counts
     
     def execute(self):
@@ -78,7 +80,6 @@ class WatchCountScraper(StockTwitsScraper):
                 col_index = 1)
         
         watch_counts = self.get_watch_counts(symbols)
-        
         new_col_index = get_new_col_index(self.sheet)
         
         setup_column(
@@ -100,7 +101,7 @@ class TrendingSymbolScraper(StockTwitsScraper):
     WATCH_COUNT_GSHEET = 'TrendingWatchCount'
     ranking_categories = ['trending', 'most-active', 'watchers']
     
-    def __init__(self, scraping_category):
+    def __init__(self, scraping_category: str):
         super().__init__()
 
         if(self.is_valid_scraping_category(scraping_category)):
@@ -110,12 +111,12 @@ class TrendingSymbolScraper(StockTwitsScraper):
         self.watch_sheet = get_sheet(self.spreadsheet, self.WATCH_COUNT_GSHEET)
         self.sheets = [self.price_sheet, self.watch_sheet]
 
-    def is_valid_scraping_category(self, category):
+    def is_valid_scraping_category(self, category: str) -> bool:
         if(category.lower() in self.ranking_categories
                 and isinstance(category, str)):
             return True
 
-    def scrape_trending_symbols(self):
+    def scrape_trending_symbols(self) -> List[str]:
         wd = get_web_driver()
         trending_symbols = []
 
@@ -135,15 +136,16 @@ class TrendingSymbolScraper(StockTwitsScraper):
             pass
         finally:
             wd.quit() 
+
         return trending_symbols
     
-    def get_trending_symbols(self):
+    def get_trending_symbols(self) -> List[str]:
         kill_chrome()
         trending_symbols_raw = self.scrape_trending_symbols()
         trending_symbols = [symbol.replace('-', '.') for symbol in trending_symbols_raw]
         return trending_symbols
 
-    def get_symbols_data(self, symbols:list):
+    def get_symbols_data(self, symbols: List[str]) -> Tuple[List[str], List[str]]:
         prices = []
         watch_counts = []
 
@@ -156,7 +158,7 @@ class TrendingSymbolScraper(StockTwitsScraper):
 
         return prices, watch_counts
 
-    def scrape_symbol_data(self,ticker_url:str):
+    def scrape_symbol_data(self, ticker_url: str) -> Tuple[str, str]:
         """ return prices and counts of trending symbols """
         price, watch_count = '', ''
 
@@ -197,7 +199,6 @@ class TrendingSymbolScraper(StockTwitsScraper):
                 #bump this number up
                 time.sleep(10)    
         
-
             tracked_symbols = get_column_values(self.price_sheet, 
                     col_index = 1)
         

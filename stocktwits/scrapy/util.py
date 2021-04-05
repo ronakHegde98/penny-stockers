@@ -7,7 +7,7 @@ def get_current_datetime() -> str:
   current_time = datetime.now(tz = central_tz)
   return datetime.strftime(current_time, format) 
 
-def is_int(input_str) -> int:
+def is_int(input_str: str) -> int:
     if(input_str):
         if(',' in input_str):
             input_str = input_str.replace(',', '')

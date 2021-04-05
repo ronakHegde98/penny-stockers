@@ -1,6 +1,8 @@
 # FEATURE LOG
 
-1. modularizing the code for TrendingSymbolScraper
-2. implement different loggers in a logger.py file
-3. write script to execute bash script from python
-4   
+
+0. type hints for sheets util
+1. logging 
+2. docstrings for functions
+3. documentation
+   
