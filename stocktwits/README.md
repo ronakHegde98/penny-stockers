@@ -1,11 +1,7 @@
 # Stocktwits Scraper
 
-> Track prices and watch counts for tracked and trending stocks! Keep track of price changes 📈
-
 ## Description
-
-#### Sources
- 1. [Stocktwits](https://stocktwits.com/)
+Track prices and watch counts for tracked and trending stocks using [Stocktwits](https://stocktwits.com/)! Keep track of price changes 📈
 
 #### Technologies
  - Language: Python 3.8.5
