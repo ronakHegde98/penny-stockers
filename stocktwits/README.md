@@ -15,9 +15,9 @@ Track prices and watch counts for tracked and trending stocks using [Stocktwits]
 ```
 git clone https://github.com/ronakHegde98/penny-stockers.git
 ```
-2. Create a virtual environment
+2. Create and activate a virtual environment
 ```
-cd stocktwits; python3 -m venv venv
+cd stocktwits; python3 -m venv venv; source venv/bin/activate
 ```
 3. Install Project Dependencies
 ```
