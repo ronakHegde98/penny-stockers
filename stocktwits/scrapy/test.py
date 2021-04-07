@@ -1,5 +1,6 @@
 import os
 from typing import Tuple, List
+from scraper import TrendingSymbolScraper
 
 class People:
     BASE_URL = 'reojroejr'
@@ -17,5 +18,4 @@ def hello() -> Tuple[List[int], List[int]]:
 def another_one() -> List[int]:
     return [1]
 
-hello()
-another_one()
+

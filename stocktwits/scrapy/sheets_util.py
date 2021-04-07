@@ -51,3 +51,4 @@ def setup_column(sheet, append_new_column = True, new_col_index = None):
 
 def get_column_values(sheet, col_index: int, starting_row_index: int = 1):
     return sheet.col_values(col_index)[starting_row_index:]
+
