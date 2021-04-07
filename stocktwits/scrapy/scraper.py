@@ -4,7 +4,7 @@ from sheets_util import *
 
 from bs4 import BeautifulSoup
 from pathlib import Path
-from typing import Tuple, List
+from typing import Tuple, List, Dict
 import pandas as pd
 import requests
 import random
@@ -143,7 +143,7 @@ class TrendingSymbolScraper(StockTwitsScraper):
         trending_symbols = [symbol.replace('-', '.') for symbol in trending_symbols_raw]
         return trending_symbols
 
-    def get_symbols_data(self, symbols: List[str]) -> Tuple[List[str], List[str]]:
+    def get_symbols_data(self, symbols: List[str]) -> Tuple[Dict[str,str], Dict[str,str]]:
         prices = {}
         watch_counts = {}
 
@@ -222,7 +222,7 @@ class TrendingSymbolScraper(StockTwitsScraper):
                     start_row_index = 2)
         
 if __name__ == "__main__":
-    '''
+    ''' 
     PRICE_GSHEET = 'Watchers_Price'
     WATCH_COUNT_GSHEET = 'Watchers_WatchCount'
 
@@ -230,7 +230,6 @@ if __name__ == "__main__":
     TSS.execute()
     
     time.sleep(10)
-    '''
 
     PRICE_GSHEET = 'Trending_Price'
     WATCH_COUNT_GSHEET = 'Trending_WatchCount'
@@ -238,9 +237,12 @@ if __name__ == "__main__":
     TSS.execute()
     
     time.sleep(10)
+    '''
+    '''
     PRICE_GSHEET = 'MostActive_Price'
     WATCH_COUNT_GSHEET = 'MostActive_WatchCount'
     TSS = TrendingSymbolScraper(scraping_category = 'most-active', price_sheet = PRICE_GSHEET, watch_sheet = WATCH_COUNT_GSHEET)
-    
-    #WCS = WatchCountScraper()
-    #WCS.execute()
+    TSS.execute() 
+    '''
+    WCS = WatchCountScraper()
+    WCS.execute()

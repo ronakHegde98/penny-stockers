@@ -83,4 +83,3 @@ websockets==8.1
 Werkzeug==1.0.1
 wrapt==1.12.1
 xlrd==2.0.1
-yfinance==0.1.55
