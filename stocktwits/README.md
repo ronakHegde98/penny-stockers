@@ -3,6 +3,12 @@
 ## Description
 Track prices and watch counts for tracked and trending stocks using [Stocktwits](https://stocktwits.com/)! Keep track of price changes 📈
 
+
+
+![WatchCountScraper](https://github.com/ronakHegde98/penny-stockers/blob/main/stocktwits/StockTwitsScraper.gif)
+
+
+
 #### Technologies
  - Language: Python 3.8.5
  - Web Framework: Flask
