@@ -1,4 +1,4 @@
-Stocktwits Scraper
+# Stocktwits Scraper
 
 > Track prices and watch counts for tracked and trending stocks! Keep track of price changes 📈
 
