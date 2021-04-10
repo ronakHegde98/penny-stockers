@@ -5,7 +5,7 @@ Track prices and watch counts for tracked and trending stocks using [Stocktwits]
 
 
 
-![WatchCountScraper](https://github.com/ronakHegde98/penny-stockers/blob/main/stocktwits/StockTwitsScraper.gif)
+![WatchCountScraper](https://github.com/ronakHegde98/penny-stockers/blob/main/stocktwits/static/StockTwitsScraper.gif)
 
 
 

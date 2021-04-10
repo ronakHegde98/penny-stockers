@@ -26,11 +26,10 @@ class StockTwitsScraper:
 
     BASE_URL = 'https://stocktwits.com'
     SYMBOL_BASE_URL = BASE_URL + '/symbol/'
-    spreadsheet_name = 'Penny Stalkers'
 
-    def __init__(self):
+    def __init__(self, spreadsheet: str):
         gsheets_client = get_gsheets_client()
-        self.spreadsheet = gsheets_client.open(self.spreadsheet_name)
+        self.spreadsheet = gsheets_client.open(spreadsheet)
     
     def get_symbol_price(self, soup: BeautifulSoup) -> str:
         price_class = 'st_3zYaKAL'
@@ -49,11 +48,9 @@ class StockTwitsScraper:
 
 class WatchCountScraper(StockTwitsScraper):
     
-    GSHEET = 'Stocktwits'
-
-    def __init__(self):
-        super().__init__()
-        self.sheet = get_sheet(spreadsheet = self.spreadsheet, sheet_name = self.GSHEET)
+    def __init__(self, spreadsheet: str, sheet: str):
+        super().__init__(spreadsheet)
+        self.sheet = get_sheet(spreadsheet = self.spreadsheet, sheet_name = sheet)
 
     def get_watch_counts(self, symbols: List[str]) -> List[str]:
         watch_counts = []
@@ -99,8 +96,8 @@ class TrendingSymbolScraper(StockTwitsScraper):
 
     ranking_categories = ['trending', 'most-active', 'watchers']
     
-    def __init__(self, scraping_category: str, price_sheet: str, watch_sheet: str) -> None:
-        super().__init__()
+    def __init__(self, spreadsheet: str, scraping_category: str, price_sheet: str, watch_sheet: str) -> None:
+        super().__init__(spreadsheet)
         
         self.validate_scraping_category(scraping_category)
         self.TRENDING_URL = self.BASE_URL + f'/rankings/{scraping_category}'
@@ -219,30 +216,4 @@ class TrendingSymbolScraper(StockTwitsScraper):
             fill_column(col_index = new_col_index,
                     sheet = sheet,
                     data = data,
-                    start_row_index = 2)
-        
-if __name__ == "__main__":
-    ''' 
-    PRICE_GSHEET = 'Watchers_Price'
-    WATCH_COUNT_GSHEET = 'Watchers_WatchCount'
-
-    TSS = TrendingSymbolScraper(scraping_category = 'watchers', price_sheet = PRICE_GSHEET, watch_sheet = WATCH_COUNT_GSHEET)
-    TSS.execute()
-    
-    time.sleep(10)
-
-    PRICE_GSHEET = 'Trending_Price'
-    WATCH_COUNT_GSHEET = 'Trending_WatchCount'
-    TSS = TrendingSymbolScraper(scraping_category = 'trending', price_sheet = PRICE_GSHEET, watch_sheet = WATCH_COUNT_GSHEET)
-    TSS.execute()
-    
-    time.sleep(10)
-    '''
-    '''
-    PRICE_GSHEET = 'MostActive_Price'
-    WATCH_COUNT_GSHEET = 'MostActive_WatchCount'
-    TSS = TrendingSymbolScraper(scraping_category = 'most-active', price_sheet = PRICE_GSHEET, watch_sheet = WATCH_COUNT_GSHEET)
-    TSS.execute() 
-    '''
-    WCS = WatchCountScraper()
-    WCS.execute()
+                    start_row_index = 2) 

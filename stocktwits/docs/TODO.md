@@ -1,8 +1,10 @@
 # FEATURE LOG
 
-
-0. type hints for sheets util
-1. logging 
-2. docstrings for functions
-3. documentation
+1. logging
+2. flask application
+	- oauth
+	- drive api to show user all the spreadsheets
+	- pick a scraper -> TrendingSymbolScraper or WatchCount
+	- pass parameters
+3. potential streamlit application 
    
