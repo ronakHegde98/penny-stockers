@@ -13,10 +13,9 @@ stocktwits/logs/
 # virtual environment
 venv/
 
-
-
-stocktwits/config/google_creds.json
-google_creds.json
+stocktwits/config/google_rob_creds.json
+stocktwits/config/google_ronak_creds.json
+stocktwits/config/google_tommy_creds.json
 config/google_creds.json
 stocktwits/config/*.json
 
